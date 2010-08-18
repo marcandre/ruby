@@ -795,6 +795,54 @@ enumerator_inspect(VALUE obj)
 }
 
 /*
+ * call-seq:
+ *   e.receiver  -> obj
+ *
+ *  Returns the object that <i>e</i> will call when iterated.
+ *
+ *    "hello".to_enum(:gsub, /l/).receiver # => "hello"
+ */
+
+static VALUE
+enumerator_receiver(VALUE obj)
+{
+    return enumerator_ptr(obj)->obj;
+}
+
+/*
+ * call-seq:
+ *   e.method  -> sym
+ *
+ *  Returns the method that <i>e</i> will send when iterated.
+ *
+ *    "hello".to_enum(:gsub, /l/).method # => :gsub
+ */
+
+static VALUE
+enumerator_method(VALUE obj)
+{
+    return ID2SYM(enumerator_ptr(obj)->meth);
+}
+
+/*
+ * call-seq:
+ *   e.arguments  -> ary
+ *
+ *  Returns the arguments that <i>e</i> will send when iterated.
+ *
+ *    "hello".to_enum(:gsub, /l/).arguments # => [/l/]
+ */
+
+static VALUE
+enumerator_arguments(VALUE obj)
+{
+    VALUE dup, args = enumerator_ptr(obj)->args;
+    if (!args) return rb_ary_new2(0);
+    dup = rb_ary_new2(RARRAY_LEN(args));
+    return rb_ary_replace(dup, args);
+}
+
+/*
  * Yielder
  */
 static void
@@ -1099,6 +1147,9 @@ Init_Enumerator(void)
     rb_define_method(rb_cEnumerator, "feed", enumerator_feed, 1);
     rb_define_method(rb_cEnumerator, "rewind", enumerator_rewind, 0);
     rb_define_method(rb_cEnumerator, "inspect", enumerator_inspect, 0);
+    rb_define_method(rb_cEnumerator, "receiver", enumerator_receiver, 0);
+    rb_define_method(rb_cEnumerator, "method", enumerator_method, 0);
+    rb_define_method(rb_cEnumerator, "arguments", enumerator_arguments, 0);
 
     rb_eStopIteration = rb_define_class("StopIteration", rb_eIndexError);
     rb_define_method(rb_eStopIteration, "result", stop_result, 0);
