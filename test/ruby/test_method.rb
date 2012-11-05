@@ -201,6 +201,8 @@ class TestMethod < Test::Unit::TestCase
     def o.bar; end
     m = o.method(:bar).unbind
     assert_raise(TypeError) { m.bind(Object.new) }
+    m = o.method(:object_id).unbind
+    m.bind(Object.new) # [ruby-core:48847]
   end
 
   def test_define_method

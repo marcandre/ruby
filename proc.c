@@ -1590,23 +1590,27 @@ rb_method_call(int argc, VALUE *argv, VALUE method)
  *     umeth.bind(obj) -> method
  *
  *  Bind <i>umeth</i> to <i>obj</i>. If <code>Klass</code> was the class
- *  from which <i>umeth</i> was obtained,
+ *  in which <i>umeth</i> was defined,
  *  <code>obj.kind_of?(Klass)</code> must be true.
  *
  *     class A
  *       def test
- *         puts "In test, class = #{self.class}"
+ *         puts "Defined in A, class = #{self.class}"
  *       end
  *     end
  *     class B < A
+ *       def test
+ *         puts "Redefined in B, class = #{self.class}"
+ *       end
  *     end
  *     class C < B
  *     end
  *
  *
- *     um = B.instance_method(:test)
- *     bm = um.bind(C.new)
+ *     um = A.instance_method(:test)
+ *     bm = um.bind(B.new)
  *     bm.call
+ *     um = C.instance_method(:test)
  *     bm = um.bind(B.new)
  *     bm.call
  *     bm = um.bind(A.new)
@@ -1614,8 +1618,8 @@ rb_method_call(int argc, VALUE *argv, VALUE method)
  *
  *  <em>produces:</em>
  *
- *     In test, class = C
- *     In test, class = B
+ *     Defined in A, class = B
+ *     Redefined in B, class = B
  *     prog.rb:16:in `bind': bind argument must be an instance of B (TypeError)
  *     	from prog.rb:16
  */
@@ -1627,14 +1631,14 @@ umethod_bind(VALUE method, VALUE recv)
 
     TypedData_Get_Struct(method, struct METHOD, &method_data_type, data);
 
-    if (data->rclass != CLASS_OF(recv) && !rb_obj_is_kind_of(recv, data->rclass)) {
-	if (FL_TEST(data->rclass, FL_SINGLETON)) {
+    if (data->me->klass != CLASS_OF(recv) && !rb_obj_is_kind_of(recv, data->me->klass)) {
+	if (FL_TEST(data->me->klass, FL_SINGLETON)) {
 	    rb_raise(rb_eTypeError,
 		     "singleton method called for a different object");
 	}
 	else {
 	    rb_raise(rb_eTypeError, "bind argument must be an instance of %s",
-		     rb_class2name(data->rclass));
+		     rb_class2name(data->me->klass));
 	}
     }
 
