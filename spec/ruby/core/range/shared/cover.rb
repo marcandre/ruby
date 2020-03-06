@@ -148,6 +148,35 @@ describe :range_cover, shared: true do
         (0...11.1).send(@method, (0..10.1)).should be_true
         (0..10.1).send(@method, (0...11.1)).should be_false
       end
+
+      it "supports endless ranges" do
+        Range.new(0, nil).send(@method, (-3..7)).should be_false
+        Range.new(0, nil).send(@method, (3..7)).should be_true
+        Range.new(0, nil, true).send(@method, (3..Float::INFINITY)).should be_true
+        Range.new('a', nil).send(@method, ('x'..'zzz')).should be_true
+      end
+
+      it "supports endless range arguments" do
+        (0..10).send(@method, Range.new(3, nil)).should be_false
+        ('a'..'z').send(@method, Range.new('z', nil)).should be_false
+      end
+
+      it "supports boundaries of endless ranges" do
+        Range.new('a', nil).send(@method, Range.new('z', nil)).should be_true
+        Range.new(0, nil).send(@method, Range.new(3, nil)).should be_true
+        Range.new('a', nil, true).send(@method, Range.new('z', nil, true)).should be_true
+        Range.new(0, nil, true).send(@method, Range.new(3, nil, true)).should be_true
+        Range.new('a', nil, true).send(@method, Range.new('z', nil)).should be_false
+        Range.new(0, nil, true).send(@method, Range.new(3, nil)).should be_false
+      end
+    end
+
+    it "supports endless ranges with comparable arguments" do
+      Range.new(0, nil).send(@method, -3).should be_false
+      Range.new(0, nil).send(@method, 7).should be_true
+      Range.new(0, nil, true).send(@method, 3).should be_true
+      Range.new('a', nil).send(@method, 'x').should be_true
+      Range.new('a', nil, true).send(@method, 'x').should be_true
     end
   end
 end
