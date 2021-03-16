@@ -122,6 +122,24 @@ class TestHash < Test::Unit::TestCase
     assert_equal set2, set2.dup
   end
 
+  def test_select_reject_will_not_rehash
+    x = []
+    set1 = @cls[x, true]
+    x << 42 # set1 need to be rehashed
+    set2 = set1.select { true }
+    set3 = set1.reject { false }
+    set1.rehash
+
+    assert_not_equal set1, set2
+    assert_not_equal set1, set3
+
+    # Sanity check:
+    set2.rehash
+    set3.rehash
+    assert_equal set1, set2
+    assert_equal set1, set3
+  end
+
   def test_s_AREF
     h = @cls["a" => 100, "b" => 200]
     assert_equal(100, h['a'])
