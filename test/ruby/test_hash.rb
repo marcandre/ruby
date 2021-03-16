@@ -113,13 +113,18 @@ class TestHash < Test::Unit::TestCase
     assert_equal(2, h[1])
   end
 
-  def test_dup_will_rehash
-    set1 = @cls[]
-    set2 = @cls[set1 => true]
+  def test_dup_will_not_rehash
+    x = []
+    set1 = @cls[x, true]
+    x << 42 # set1 need to be rehashed
+    set2 = set1.dup
+    set1.rehash
 
-    set1[set1] = true
+    assert_not_equal set1, set2
 
-    assert_equal set2, set2.dup
+    # Sanity check:
+    set2.rehash
+    assert_equal set1, set2
   end
 
   def test_s_AREF
@@ -455,6 +460,7 @@ class TestHash < Test::Unit::TestCase
     h1 = @cls[h => 1]
     assert_equal(h1, h1.dup)
     h[1] = 2
+    h1.rehash
     assert_equal(h1, h1.dup)
   end
 
